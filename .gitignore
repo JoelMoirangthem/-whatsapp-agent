@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[c]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.pyc
+
+# Node / opencode
+node_modules/
+.opencode/
+.opencode/node_modules/
+.opencode/package-lock.json
+
+# Secrets - NEVER commit
+.env
+.env.local
+*.env
+!.env.example
+!.env.compose.example
+**/.env
+agent-service/.env
+whatsapp-mcp/.env
+whatsapp-bridge/.env
+
+# Runtime data - sensitive / large
+agent-service/data/
+whatsapp-mcp/whatsapp-bridge/store/
+whatsapp-bridge/store/
+store/
+*.db
+*.db-shm
+*.db-wal
+*.log
+
+# Go binaries & backups
+whatsapp-bridge/whatsapp-bridge
+whatsapp-bridge/whatsapp-client
+*.exe
+*.bak
+
+# OS
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+claude_desktop_config.json
+.claude/settings.local.json
+
+# Agent tokens
+.agent-token
+agent-service/.agent-token
+
+# Media & large
+*.ogg
+*.mp3
+*.wav

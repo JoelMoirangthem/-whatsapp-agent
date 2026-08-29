@@ -1,0 +1,4 @@
+# whatsapp-mcp bridge build context ignores
+store/
+*.db
+.bridge-token

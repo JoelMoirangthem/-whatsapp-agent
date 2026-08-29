@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en" class="light" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeGuard WhatsApp Copilot</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        surface: "#edf2f7",
+        "surface-dim": "#e2e8f0",
+        "surface-bright": "#f8fafc",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "rgba(255, 255, 255, 0.45)",
+        "surface-container": "rgba(255, 255, 255, 0.6)",
+        "surface-container-high": "rgba(255, 255, 255, 0.72)",
+        "surface-container-highest": "#cbd5e1",
+        "on-surface": "#0f172a",
+        "on-surface-variant": "#64748b",
+        outline: "#94a3b8",
+        "outline-variant": "rgba(148, 163, 184, 0.25)",
+        primary: "#2563eb",
+        "primary-container": "#1d4ed8",
+        "on-primary": "#ffffff",
+        "on-primary-container": "#eff6ff",
+        "primary-fixed": "#3b82f6",
+        secondary: "#6366f1",
+        "secondary-container": "#4f46e5",
+        "on-secondary": "#ffffff",
+        tertiary: "#8b5cf6",
+        "tertiary-container": "#7c3aed",
+        background: "#edf2f7",
+        error: "#ef4444",
+        "error-container": "#fef2f2"
+      },
+      fontFamily: {
+        "body-md": ["Hanken Grotesk", "sans-serif"],
+        "headline-lg": ["Hanken Grotesk", "sans-serif"],
+        "headline-md": ["Hanken Grotesk", "sans-serif"],
+        "label-md": ["JetBrains Mono", "monospace"],
+        "label-sm": ["JetBrains Mono", "monospace"],
+        "chat-msg": ["Hanken Grotesk", "sans-serif"]
+      }
+    }
+  }
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css?v=97">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%232563eb'/><stop offset='1' stop-color='%236366f1'/></linearGradient></defs><rect width='24' height='24' rx='6' fill='url(%23g)'/><path d='M12 2l8.5 4.9v9.8L12 21.6l-8.5-4.9V6.9L12 2z' fill='%23fff'/></svg>">
+</head>
+<body class="bg-surface font-body-md text-on-surface overflow-hidden h-screen flex flex-col select-none">
+
+<!-- ================= 1. LEFT NAVIGATION RAIL (64px) ================= -->
+<aside class="fixed left-0 top-0 h-full w-[64px] bg-white/40 backdrop-blur-2xl border-r border-slate-300/60 z-50 flex flex-col items-center py-4 justify-between shrink-0 shadow-[4px_0_24px_rgba(15,23,42,0.03)]">
+  <div class="flex flex-col items-center gap-6 w-full px-2">
+    <!-- Brand Icon -->
+    <div class="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary shadow-[0_4px_16px_rgba(37,99,235,0.18)]">
+      <span class="material-symbols-outlined text-[22px]">shield</span>
+    </div>
+
+    <!-- Navigation Items -->
+    <nav class="flex flex-col gap-3 w-full" id="mainNav">
+      <button class="nav-btn p-3 flex justify-center rounded-xl transition-all relative group active-rail"
+              data-target="conversations" title="Conversations & Copilot" aria-label="Conversations">
+        <span class="material-symbols-outlined text-[22px]">chat</span>
+        <span class="tooltip">Conversations</span>
+      </button>
+
+      <button class="nav-btn p-3 flex justify-center rounded-xl text-on-surface-variant hover:bg-white/60 hover:text-on-surface transition-all relative group"
+              data-target="approvals" title="Pending Approvals" aria-label="Approvals">
+        <span class="material-symbols-outlined text-[22px]">fact_check</span>
+        <span class="badge absolute top-1.5 right-1.5 bg-error text-white font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center hidden shadow-sm" id="approvalsBadge">0</span>
+        <span class="tooltip">Approvals</span>
+      </button>
+
+      <button class="nav-btn p-3 flex justify-center rounded-xl text-on-surface-variant hover:bg-white/60 hover:text-on-surface transition-all relative group"
+              data-target="audit" title="System Audit & Health" aria-label="Audit">
+        <span class="material-symbols-outlined text-[22px]">history_edu</span>
+        <span class="tooltip">Audit Trail</span>
+      </button>
+
+      <button class="nav-btn p-3 flex justify-center rounded-xl text-cyan-600 hover:bg-white/60 hover:text-cyan-700 transition-all relative group"
+              title="Uhu Live Voice Mode (Wake: 'uhu')" aria-label="Uhu Voice Mode" onclick="openVoiceModal()">
+        <span class="material-symbols-outlined text-[22px] text-cyan-500 animate-pulse">android</span>
+        <span class="tooltip">Uhu Voice</span>
+      </button>
+
+      <a href="/pair" target="_blank" class="nav-btn p-3 flex justify-center rounded-xl text-on-surface-variant hover:bg-white/60 hover:text-on-surface transition-all relative group"
+         title="Link WhatsApp Device" aria-label="Link Device">
+        <span class="material-symbols-outlined text-[22px]">qr_code_2</span>
+        <span class="tooltip">Link Device</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Bottom: Profile Avatar & Theme Toggle -->
+  <div class="flex flex-col items-center gap-3">
+    <button class="iconbtn p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/60 transition-colors"
+            id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
+      <span class="material-symbols-outlined text-[20px]">dark_mode</span>
+    </button>
+    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary via-secondary to-tertiary flex items-center justify-center font-bold text-xs text-white shadow-md border border-white/60" title="Agent Operator">
+      OP
+    </div>
+  </div>
+</aside>
+
+<!-- ================= 2. MAIN APP SHELL (offset 64px) ================= -->
+<div class="pl-[64px] h-screen flex flex-col flex-1 overflow-hidden">
+  <!-- Top App Header -->
+  <header class="h-14 flex items-center justify-between px-5 bg-white/50 backdrop-blur-2xl border-b border-slate-300/60 shrink-0 z-30 shadow-[0_4px_20px_rgba(15,23,42,0.02)]">
+    <div class="flex items-center gap-3">
+      <div class="font-headline-md text-base text-primary font-bold tracking-wide flex items-center gap-2">
+        <span class="bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent">SafeGuard WhatsApp Copilot</span>
+        <span class="text-[10px] font-label-md px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/25 text-primary uppercase font-bold shadow-[0_0_10px_rgba(37,99,235,0.12)]">Active</span>
+      </div>
+    </div>
+
+    <!-- Health Telemetry Pills -->
+    <div class="flex items-center gap-2.5">
+      <a class="pill link-pill border-amber-300 text-amber-600 bg-amber-50/80 hover:bg-amber-100 transition-colors" id="pairLink" href="/pair" target="_blank" style="display:none;">
+        <span class="dot warn pulse"></span><span>Link Phone &rarr;</span>
+      </a>
+      <div class="pill" id="pillWa"><span class="dot pulse"></span><span>Bridge: checking…</span></div>
+      <div class="pill" id="pillLlm"><span class="dot pulse"></span><span>LLM: checking…</span></div>
+      <div class="pill" id="pillDb"><span class="dot pulse"></span><span>DB: checking…</span></div>
+    </div>
+  </header>
+
+  <!-- ================= 3. VIEW CONTAINER ================= -->
+  <main class="flex-1 overflow-hidden relative bg-transparent">
+    
+    <!-- VIEW 1: CONVERSATIONS & COPILOT (3-Pane Command Center) -->
+    <section id="view-conversations" class="view-panel h-full flex overflow-hidden">
+      
+      <!-- LEFT PANE: Chat Roster (320px) -->
+      <div class="w-[320px] flex flex-col bg-white/35 backdrop-blur-2xl border-r border-slate-300/60 h-full shrink-0">
+        <!-- Roster Header -->
+        <div class="h-14 flex items-center justify-between px-4 bg-white/50 backdrop-blur-xl border-b border-slate-300/60 shrink-0">
+          <h2 class="font-headline-md text-base text-on-surface font-semibold">Chats</h2>
+          <div class="flex items-center gap-2 text-on-surface-variant">
+            <button class="p-1.5 hover:text-on-surface hover:bg-white/60 rounded-lg transition-colors" title="New Chat" onclick="document.getElementById('chatSearch').focus()"><span class="material-symbols-outlined text-[19px]">chat_add_on</span></button>
+            <button class="p-1.5 hover:text-on-surface hover:bg-white/60 rounded-lg transition-colors" title="Refresh" onclick="loadChatList()"><span class="material-symbols-outlined text-[19px]">refresh</span></button>
+          </div>
+        </div>
+
+        <!-- Search & Filters -->
+        <div class="p-2.5 bg-white/30 border-b border-slate-300/60 shrink-0">
+          <div class="relative flex items-center bg-white/60 backdrop-blur-md rounded-xl px-3 py-1.5 mb-2 border border-slate-300/60 focus-within:border-primary/60 focus-within:shadow-[0_0_12px_rgba(37,99,235,0.15)] transition-all">
+            <span class="material-symbols-outlined text-on-surface-variant text-sm mr-2.5">search</span>
+            <input id="chatSearch" type="search" placeholder="Search name or number…"
+                   class="w-full bg-transparent border-none outline-none text-xs text-on-surface placeholder:text-on-surface-variant">
+            <button id="chatSearchClear" class="text-on-surface-variant hover:text-on-surface text-xs hidden p-0.5" title="Clear"><span class="material-symbols-outlined text-xs">close</span></button>
+          </div>
+          <div class="flex gap-1.5 px-0.5">
+            <button class="chat-filter-btn active px-3 py-1 bg-primary/10 border border-primary/25 rounded-full text-xs text-primary font-semibold transition-all shadow-[0_2px_8px_rgba(37,99,235,0.12)]" data-filter="all">All</button>
+            <button class="chat-filter-btn px-3 py-1 bg-white/40 hover:bg-white/70 border border-slate-300/40 rounded-full text-xs text-on-surface-variant transition-all" data-filter="unread">Unread</button>
+            <button class="chat-filter-btn px-3 py-1 bg-white/40 hover:bg-white/70 border border-slate-300/40 rounded-full text-xs text-on-surface-variant transition-all" data-filter="groups">Groups</button>
+          </div>
+        </div>
+
+        <!-- Dynamic Chat Roster List -->
+        <div class="flex-1 overflow-y-auto divide-y divide-slate-200/50" id="chatListItems" role="listbox" aria-label="Chats">
+          <div class="empty text-xs text-center py-10 text-on-surface-variant">Loading chats…</div>
+        </div>
+      </div>
+
+      <!-- CENTER PANE: WhatsApp Conversation Stream -->
+      <div class="flex-1 flex flex-col relative min-w-0 bg-transparent h-full border-r border-slate-300/60">
+        <!-- Subtle Vector Grid Pattern -->
+        <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#0f172a 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+        <!-- Active Conversation Header -->
+        <div class="h-14 px-4 bg-white/50 backdrop-blur-2xl flex items-center justify-between border-b border-slate-300/60 z-10 shrink-0 shadow-sm" id="convoHead">
+          <div class="flex items-center gap-3">
+            <span class="avatar-wrap" id="convoAvatar"><div class="avatar">WA</div></span>
+            <div>
+              <h3 class="text-sm font-semibold text-on-surface leading-tight" id="convoTitle">Select a conversation</h3>
+              <div class="flex items-center gap-1.5" id="convoSub">
+                <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                <p class="text-xs text-on-surface-variant font-label-md">Direct WhatsApp Gateway</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 text-on-surface-variant">
+            <button class="p-2 hover:text-primary hover:bg-white/60 rounded-xl transition-all" title="Summarize conversation with AI Copilot" onclick="summarizeCurrentChat()">
+              <span class="material-symbols-outlined text-[19px]">summarize</span>
+            </button>
+            <button class="p-2 hover:text-primary hover:bg-white/60 rounded-xl transition-all" title="Refresh messages" onclick="if(activeChatJid)loadConvo(activeChatJid, activeChatName)">
+              <span class="material-symbols-outlined text-[19px]">sync</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- WhatsApp Messages Log -->
+        <div class="flex-1 overflow-y-auto px-3 py-1.5 flex flex-col gap-1 relative z-10" id="msgLog" aria-live="polite">
+          <div class="empty text-center py-16 text-xs text-on-surface-variant">
+            <span class="material-symbols-outlined text-4xl text-primary/40 block mb-2">forum</span>
+            Select a contact to view chat history.<br>Message sends and deletions wait for approval.
+          </div>
+        </div>
+
+        <!-- In-Chat Focused Media Popout Overlay (Scoped to Conversation Viewport) -->
+        <div id="mediaZoomOverlay" class="chat-media-overlay hidden" onclick="closeMediaZoom(event)">
+          <div class="chat-media-card" onclick="event.stopPropagation()">
+            <img id="mediaZoomImg" src="" alt="Focused view" class="chat-media-img">
+            <button type="button" class="chat-media-close" title="Close photo view (or click anywhere outside)" onclick="closeMediaZoom(event)">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Floating Scroll to Bottom Button -->
+        <button id="scrollBottomBtn" class="scroll-bottom-btn hidden" title="Scroll to newest messages" onclick="scrollConvoToBottom(true)">
+          <span class="material-symbols-outlined text-[19px]">arrow_downward</span>
+        </button>
+
+        <!-- Interactive Quick Suggestion Prompt Chips -->
+        <div class="quick-chips hidden" id="quickChips">
+          <button class="quick-chip" onclick="quickPrompt('Summarize recent messages')"><span class="material-symbols-outlined text-xs text-primary">auto_awesome</span>Summarize</button>
+          <button class="quick-chip" onclick="quickPrompt('Suggest polite reply')"><span class="material-symbols-outlined text-xs text-secondary">reply</span>Suggest Reply</button>
+          <button class="quick-chip" onclick="quickPrompt('Extract action items & tasks')"><span class="material-symbols-outlined text-xs text-amber-500">checklist</span>Extract Tasks</button>
+          <button class="quick-chip" onclick="quickPrompt('Draft meeting invite')"><span class="material-symbols-outlined text-xs text-primary">calendar_today</span>Schedule</button>
+        </div>
+
+        <!-- WhatsApp Message Composer Wrapper -->
+        <div class="relative z-10 flex flex-col" id="composerWrap">
+          <!-- Quoted Reply Banner -->
+          <div class="reply-preview-bar hidden" id="replyPreview">
+            <div>
+              <div class="reply-preview-sender" id="replySender">Replying to Alice</div>
+              <div class="reply-preview-text" id="replyText">Sample quoted text preview...</div>
+            </div>
+            <button type="button" class="text-on-surface-variant hover:text-on-surface p-1" onclick="cancelReply()"><span class="material-symbols-outlined text-sm">close</span></button>
+          </div>
+
+          <!-- Emoji Popover Tray -->
+          <div class="emoji-popover hidden" id="emojiPopover">
+            <button type="button" class="emoji-item" onclick="insertEmoji('👍')">👍</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('❤️')">❤️</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('😊')">😊</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('😂')">😂</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('🙏')">🙏</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('🔥')">🔥</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('✨')">✨</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('🚀')">🚀</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('👏')">👏</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('🎉')">🎉</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('💯')">💯</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('🤝')">🤝</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('💡')">💡</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('📞')">📞</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('⏳')">⏳</button>
+            <button type="button" class="emoji-item" onclick="insertEmoji('👋')">👋</button>
+          </div>
+
+          <!-- WhatsApp Message Composer -->
+          <form class="p-2.5 bg-white/60 backdrop-blur-2xl flex items-end gap-2 shrink-0 border-t border-slate-300/80" id="sendForm" style="display:none;">
+            <div class="flex items-center gap-1 text-on-surface-variant pb-1 px-0.5">
+              <button type="button" class="p-1.5 hover:text-primary hover:bg-white/60 rounded-xl transition-all" id="emojiToggleBtn" title="Emojis" onclick="toggleEmojiTray()"><span class="material-symbols-outlined text-[20px]">mood</span></button>
+              <button type="button" class="p-1.5 hover:text-primary hover:bg-white/60 rounded-xl transition-all" title="Attach media or document" onclick="toast('Media attachments can be forwarded via WhatsApp or automated with Copilot')"><span class="material-symbols-outlined text-[19px] rotate-45">attach_file</span></button>
+            </div>
+            <div class="flex-1 bg-white rounded-xl px-3 py-1.5 flex items-center border border-slate-300 focus-within:border-primary transition-all shadow-sm min-h-[38px]">
+              <textarea id="draftMsg" rows="1" placeholder="Type a message (Enter to stage for approval, Shift+Enter for newline)"
+                        class="w-full bg-transparent border-none outline-none text-xs text-on-surface placeholder:text-on-surface-variant resize-none leading-relaxed"></textarea>
+            </div>
+            <button type="submit" class="p-2.5 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl hover:brightness-105 transition-all flex items-center justify-center shadow-[0_4px_16px_rgba(37,99,235,0.25)] shrink-0 mb-0.5" title="Propose send (Enter)">
+              <span class="material-symbols-outlined text-[18px]">send</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- RIGHT PANE: AI Copilot & Voice Agent (380px) -->
+      <aside class="w-[380px] bg-slate-100/75 backdrop-blur-2xl flex flex-col h-full shrink-0 z-20 border-l border-slate-300">
+        <!-- Stitch Tab Switcher: Chat Copilot vs Voice Agent -->
+        <div class="flex justify-center items-center py-2.5 px-3 border-b border-slate-300 bg-white/80 backdrop-blur-xl shrink-0">
+          <div class="flex bg-slate-200/90 rounded-full p-1 border border-slate-300/80 shadow-inner w-full">
+            <button type="button" class="flex-1 py-1.5 rounded-full font-label-md text-xs font-semibold bg-white text-primary shadow-sm flex items-center justify-center gap-1.5 transition-all" id="copilotTabChat" onclick="switchCopilotTab('chat')">
+              <span class="material-symbols-outlined text-[15px]">chat</span> Chat Copilot
+            </button>
+            <button type="button" class="flex-1 py-1.5 rounded-full font-label-md text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 transition-all" id="copilotTabVoice" onclick="switchCopilotTab('voice')">
+              <span class="material-symbols-outlined text-[15px] animate-pulse text-cyan-600">keyboard_voice</span> Voice Agent
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. CHAT COPILOT VIEW -->
+        <div class="flex flex-col flex-1 h-full overflow-hidden" id="copilotChatView">
+          <!-- Copilot Stream & Chat Log -->
+          <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-2 bg-transparent" id="chatlog" aria-live="polite"></div>
+
+          <!-- Copilot Suggestion Chips -->
+          <div class="quick-chips border-t border-slate-300/80 bg-white/50" id="copilotChips">
+            <button class="quick-chip" onclick="askCopilot('Tell me a joke or chat casually')">💬 Chat</button>
+            <button class="quick-chip" onclick="askCopilot('Summarize the current conversation')">🪄 Summarize</button>
+            <button class="quick-chip" onclick="askCopilot('What pending approvals or actions do we have?')">📋 Approvals</button>
+            <button class="quick-chip" onclick="askCopilot('Search recent messages for important details')">🔍 Search</button>
+          </div>
+
+          <!-- Copilot Composer -->
+          <form class="p-2.5 bg-white/80 backdrop-blur-2xl border-t border-slate-300 shrink-0 flex items-end gap-2" id="composer">
+            <div class="flex-1 bg-white rounded-xl px-3 py-1.5 border border-slate-300 focus-within:border-primary transition-all shadow-sm min-h-[38px] flex items-center">
+              <textarea id="msg" rows="1" placeholder="Chat naturally or ask WhatsApp tasks — e.g. 'Tell me a joke' or 'Send hi to Alice'..."
+                        class="w-full bg-transparent border-none outline-none text-xs text-on-surface placeholder:text-on-surface-variant resize-none leading-relaxed"></textarea>
+            </div>
+            <button type="submit" class="p-2.5 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl hover:brightness-105 transition-all flex items-center justify-center shadow-[0_4px_16px_rgba(37,99,235,0.25)] shrink-0 mb-0.5" title="Send (Enter)">
+              <span class="material-symbols-outlined text-[18px]">arrow_upward</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- 2. EMBEDDED VOICE AGENT VIEW (Google Stitch Design) -->
+        <div class="hidden flex-col flex-1 h-full overflow-hidden bg-slate-900/95 text-white" id="copilotVoiceView">
+          <!-- Voice Stream Status Bar -->
+          <div class="p-2.5 bg-slate-950/90 border-b border-cyan-500/20 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>
+              <span class="font-label-sm text-[10px] text-cyan-300 uppercase tracking-wider font-bold">UHU VOICE ACTIVE</span>
+            </div>
+            <select id="voiceSelectPane" aria-label="Voice selection" class="bg-slate-800 border border-slate-700 text-[11px] text-slate-200 rounded-lg px-2 py-0.5 outline-none cursor-pointer">
+              <option value="JBFqnCBsd6RMkjVDRZzb">George (Warm)</option>
+              <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Calm)</option>
+              <option value="EXAVITQu4vr4xnSDxMaL">Sarah (Confident)</option>
+              <option value="IKne3meq5aSn9XLyUdCD">Charlie (Dynamic)</option>
+              <option value="SAz9YHcvj6GT2YYXdXww">River (Neutral)</option>
+            </select>
+          </div>
+
+          <!-- Central Animated Voice Sphere Stage -->
+          <div class="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+            <!-- Background Pulse Blurs -->
+            <div class="absolute inset-0 flex items-center justify-center opacity-40 pointer-events-none">
+              <div class="w-64 h-64 rounded-full bg-cyan-500/20 blur-[60px] animate-pulse"></div>
+              <div class="absolute w-44 h-44 rounded-full bg-blue-600/20 blur-[40px] animate-pulse"></div>
+            </div>
+
+            <!-- Voice Circle Sphere -->
+            <div class="gemini-sphere-wrap my-2" id="voiceStageWrapPane">
+              <div class="gemini-ambient-aura" id="voiceAmbientAuraPane"></div>
+              <div class="gemini-sphere-ripple ring-1"></div>
+              <div class="gemini-sphere-ripple ring-2"></div>
+              <div class="gemini-sphere-ripple ring-3"></div>
+              <div id="voiceCirclePane" class="gemini-main-sphere state-idle" onclick="toggleVoiceListening()">
+                <div class="sphere-gradient-mesh"></div>
+                <div class="sphere-inner-glow"></div>
+                <div class="sphere-highlight"></div>
+              </div>
+            </div>
+
+            <!-- Status Indicator -->
+            <div class="flex flex-col items-center gap-1 text-center mt-2 z-10">
+              <div id="voicePaneStatusBadge" class="px-3 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm animate-pulse" id="voicePaneStatusIcon">mic</span>
+                <span id="voicePaneStatusText">Tap to speak or listen</span>
+              </div>
+              <div class="voice-wave-bars flex items-center gap-1 h-4 my-1">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+                <span class="bar bar-5"></span>
+              </div>
+            </div>
+
+            <!-- Live Actions Stream & Transcript -->
+            <div class="w-full bg-slate-950/80 rounded-xl p-2.5 border border-white/10 mt-2 max-h-32 overflow-y-auto text-left text-xs space-y-1.5 shadow-inner" id="voicePaneTranscript">
+              <div class="text-slate-400 italic text-center py-2 text-[11px]" id="voicePaneEmpty">
+                Talk naturally: <i>"Tell me a joke"</i>, <i>"What's 2+2?"</i> or <i>"Check WhatsApp from Alice"</i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Voice Controls -->
+          <div class="p-3 bg-slate-950/90 border-t border-slate-800 flex items-center justify-center gap-2 shrink-0">
+            <button id="voicePaneMicBtn"
+              class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-xs
+                     bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 hover:brightness-110 active:scale-95 transition-all"
+              onclick="toggleVoiceListening()">
+              <span class="material-symbols-outlined text-base">mic</span>
+              <span id="voicePaneMicLabel">Start Talking</span>
+            </button>
+            <button id="voicePaneStopBtn"
+              class="hidden px-3.5 py-2.5 rounded-xl font-semibold text-xs bg-rose-500/90 text-white hover:bg-rose-600 transition-all"
+              onclick="interruptVoicePlayback()" title="Stop Voice">
+              <span class="material-symbols-outlined text-base">stop</span>
+            </button>
+            <button type="button" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" title="Expand to Full View" onclick="openVoiceModal()">
+              <span class="material-symbols-outlined text-base">open_in_full</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+    </section>
+
+    <!-- VIEW 2: DEDICATED APPROVALS DASHBOARD -->
+    <section id="view-approvals" class="view-panel h-full flex flex-col p-6 overflow-y-auto hidden">
+      <div class="max-w-5xl w-full mx-auto flex flex-col gap-6">
+        <!-- Approvals Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-300/60">
+          <div>
+            <h1 class="font-headline-lg text-2xl font-bold text-on-surface">Pending Approvals</h1>
+            <p class="text-xs text-on-surface-variant mt-1 font-body-md">Human-in-the-loop validation: review AI-suggested actions before execution on WhatsApp.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-white/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-300/60 shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#2563eb]"></span>
+              <span class="text-xs font-label-md text-on-surface uppercase tracking-wider font-semibold" id="approvalsCountText">0 Pending</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approvals List -->
+        <div class="flex flex-col gap-4" id="approvalsList">
+          <div class="empty text-center py-20 bg-white/50 backdrop-blur-2xl rounded-2xl border border-slate-300/60 shadow-[0_8px_32px_rgba(15,23,42,0.04)]">
+            <span class="material-symbols-outlined text-5xl text-primary/40 block mb-3">verified</span>
+            <h3 class="font-headline-md text-base text-on-surface font-semibold">No Pending Actions</h3>
+            <p class="text-xs text-on-surface-variant mt-1">When the agent or conversation proposes a message send or delete, it will appear here for review.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: DEDICATED SYSTEM AUDIT TRAIL & HEALTH -->
+    <section id="view-audit" class="view-panel h-full flex flex-col p-6 overflow-hidden hidden">
+      <div class="max-w-6xl w-full mx-auto flex flex-col h-full gap-4">
+        <!-- Audit Header & Health Pills -->
+        <div class="flex flex-col gap-3 pb-3 border-b border-slate-300/60 shrink-0">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="font-headline-lg text-2xl font-bold text-on-surface">Audit Trail &amp; System Health</h1>
+              <p class="text-xs text-on-surface-variant font-body-md">Immutable log of tool invocations, guardrail checks, and operator approvals.</p>
+            </div>
+            <button class="px-3.5 py-1.5 bg-white/60 hover:bg-white/80 border border-slate-300/60 rounded-xl text-xs font-medium text-on-surface flex items-center gap-1.5 transition-all shadow-sm" onclick="refreshAudit()">
+              <span class="material-symbols-outlined text-sm text-primary">refresh</span>
+              <span>Refresh Log</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Audit Table Container -->
+        <div class="flex-1 overflow-auto rounded-2xl border border-slate-300/60 bg-white/50 backdrop-blur-2xl shadow-[0_8px_32px_rgba(15,23,42,0.04)]">
+          <table class="w-full text-left border-collapse">
+            <thead class="sticky top-0 bg-white/70 backdrop-blur-xl border-b border-slate-300/60 z-10">
+              <tr>
+                <th class="p-3.5 font-label-md text-xs text-on-surface-variant uppercase tracking-wider">Timestamp</th>
+                <th class="p-3.5 font-label-md text-xs text-on-surface-variant uppercase tracking-wider">Event Type</th>
+                <th class="p-3.5 font-label-md text-xs text-on-surface-variant uppercase tracking-wider">Payload Summary</th>
+                <th class="p-3.5 font-label-md text-xs text-on-surface-variant uppercase tracking-wider text-right">Details</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200/60 text-xs text-on-surface font-body-md" id="auditList">
+              <tr>
+                <td colspan="4" class="p-6 text-center text-on-surface-variant">Loading audit logs…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ================= 4. TOASTS & AUTH MODAL ================= -->
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<dialog id="auth" class="bg-white/90 text-on-surface p-6 rounded-2xl border border-slate-300/80 shadow-2xl backdrop:bg-slate-900/30 backdrop:backdrop-blur-md max-w-md w-full">
+  <div class="flex items-center gap-3 mb-3">
+    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shadow-sm">
+      <span class="material-symbols-outlined text-lg">vpn_key</span>
+    </div>
+    <h3 class="font-headline-md text-lg font-bold">Authenticate Session</h3>
+  </div>
+  <p class="text-xs text-on-surface-variant mb-4 font-body-md">
+    Enter the service token from <code class="text-primary font-label-md bg-white/80 px-1.5 py-0.5 rounded border border-slate-300/60">agent-service/data/.agent-token</code> to connect.
+  </p>
+  <input id="tokenInput" type="password" placeholder="Service token..."
+         class="w-full px-3.5 py-2.5 rounded-xl bg-white/70 border border-slate-300/60 text-xs font-label-md text-on-surface focus:outline-none focus:border-primary mb-4"
+         onkeydown="if(event.key==='Enter')saveToken()">
+  <div class="flex justify-end gap-2">
+    <button class="px-5 py-2 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:brightness-105 transition-all shadow-[0_4px_14px_rgba(37,99,235,0.25)]" id="saveToken">Connect</button>
+  </div>
+<!-- Event Detail Modal -->
+<dialog id="eventDetailModal" class="bg-white text-on-surface p-6 rounded-2xl border border-slate-300 shadow-2xl backdrop:bg-slate-900/40 backdrop:backdrop-blur-md max-w-lg w-full">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="font-headline-md text-sm font-bold text-primary">Audit Event Details</h3>
+    <button onclick="document.getElementById('eventDetailModal').close()" class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-lg">close</span></button>
+  </div>
+  <pre class="bg-slate-900 text-sky-300 p-4 rounded-xl text-[11px] font-label-md overflow-x-auto max-h-80 border border-slate-700 shadow-inner" id="eventDetailJson"></pre>
+</dialog>
+
+<!-- Floating Quick Voice Agent Launcher Button (Bottom Right) -->
+<button id="voiceFabBtn"
+  class="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full font-semibold text-xs
+         bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white shadow-[0_10px_30px_rgba(6,182,212,0.45)]
+         hover:scale-105 hover:brightness-110 active:scale-95 transition-all duration-200 cursor-pointer border border-white/25"
+  title="Open Uhu Voice Agent (Alt+V | Say 'uhu')"
+  onclick="openVoiceModal()">
+  <span class="material-symbols-outlined text-[18px] animate-pulse">android</span>
+  <span class="font-bold tracking-wide">Uhu Voice</span>
+</button>
+
+<!-- Floating Uhu Live Voice Dock / Pill (Bottom-Center) -->
+<div id="floatingVoicePill" class="floating-voice-pill hidden">
+  <div class="flex items-center gap-3 w-full">
+    <div class="pill-orb" onclick="expandVoiceModal()">
+      <div class="pill-orb-core"></div>
+      <div class="pill-orb-glow"></div>
+    </div>
+    <div class="min-w-0 flex-1 cursor-pointer" onclick="expandVoiceModal()">
+      <div class="flex items-center gap-1.5">
+        <span class="pill-status-dot"></span>
+        <span id="pillStatusText" class="text-xs font-semibold text-white truncate">Listening...</span>
+      </div>
+      <p id="pillSubText" class="text-[10px] text-cyan-300/80 truncate font-mono">Uhu ready (wake: "uhu")</p>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button type="button" class="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-cyan-400 hover:text-cyan-300 transition-all" id="pillWakeToggleBtn" title="Toggle Wake Word ('uhu')" onclick="toggleWakeWordListener()">
+        <span class="material-symbols-outlined text-[17px]" id="pillWakeIcon">hearing</span>
+      </button>
+      <button type="button" class="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all" id="pillMicBtn" title="Toggle Mic" onclick="toggleVoiceListening()">
+        <span class="material-symbols-outlined text-[17px]" id="pillMicIcon">mic</span>
+      </button>
+      <button type="button" class="p-1.5 rounded-full bg-rose-500/80 hover:bg-rose-600 text-white transition-all hidden" id="pillStopBtn" title="Stop Audio" onclick="interruptVoicePlayback()">
+        <span class="material-symbols-outlined text-[17px]">stop</span>
+      </button>
+      <button type="button" class="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all" title="Maximize View" onclick="expandVoiceModal()">
+        <span class="material-symbols-outlined text-[17px]">open_in_full</span>
+      </button>
+      <button type="button" class="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white transition-all" title="Close Voice Mode" onclick="closeVoiceModal(event)">
+        <span class="material-symbols-outlined text-[17px]">close</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Uhu Live Interactive Voice Agent Modal -->
+<div id="geminiVoiceModal" class="gemini-voice-modal hidden" onclick="closeVoiceModal(event)">
+  <div class="gemini-voice-card" onclick="event.stopPropagation()">
+    <!-- Header & Voice selector -->
+    <div class="flex items-center justify-between w-full pb-3 border-b border-white/10">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+        <h3 class="text-sm font-bold text-white font-headline-md flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-cyan-400 text-lg">android</span>
+          Uhu Voice Agent
+        </h3>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" id="wakeWordToggleBtn" class="px-2 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[11px] font-semibold flex items-center gap-1 hover:bg-cyan-500/30 transition-all cursor-pointer" title="Wake Word: 'uhu'" onclick="toggleWakeWordListener()">
+          <span class="material-symbols-outlined text-[14px]" id="wakeWordIcon">hearing</span>
+          <span id="wakeWordStatusText">Wake: ON</span>
+        </button>
+        <select id="voiceSelect" class="bg-slate-800/90 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1 outline-none focus:border-cyan-400 transition-colors cursor-pointer">
+          <option value="JBFqnCBsd6RMkjVDRZzb">George (Warm)</option>
+          <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Calm)</option>
+          <option value="EXAVITQu4vr4xnSDxMaL">Sarah (Confident)</option>
+          <option value="IKne3meq5aSn9XLyUdCD">Charlie (Dynamic)</option>
+          <option value="SAz9YHcvj6GT2YYXdXww">River (Neutral)</option>
+        </select>
+        <button type="button" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-all" title="Minimize to floating bar" onclick="minimizeVoiceModal()">
+          <span class="material-symbols-outlined text-lg">close_fullscreen</span>
+        </button>
+        <button type="button" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-all" title="Close Voice Agent" onclick="closeVoiceModal(event)">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Iconic Gemini / ChatGPT Animated Morphing Voice Circle -->
+    <div class="gemini-sphere-stage my-4">
+      <div class="gemini-sphere-wrap" id="voiceStageWrap">
+        <!-- Ambient Glowing Aura -->
+        <div class="gemini-ambient-aura" id="voiceAmbientAura"></div>
+        
+        <!-- Ripple wave rings -->
+        <div class="gemini-sphere-ripple ring-1"></div>
+        <div class="gemini-sphere-ripple ring-2"></div>
+        <div class="gemini-sphere-ripple ring-3"></div>
+
+        <!-- The Main Morphing Glowing Gradient Circle -->
+        <div id="voiceCircle" class="gemini-main-sphere state-idle" onclick="toggleVoiceListening()">
+          <div class="sphere-gradient-mesh"></div>
+          <div class="sphere-inner-glow"></div>
+          <div class="sphere-highlight"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- State & Live Audio Waveform Bars -->
+    <div class="flex flex-col items-center gap-1.5 mb-3">
+      <div id="voiceStatusBadge" class="px-3.5 py-1 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 shadow-sm">
+        <span class="material-symbols-outlined text-sm animate-pulse" id="voiceStatusIcon">mic</span>
+        <span id="voiceStatusText">Tap microphone to start speaking</span>
+      </div>
+      <div class="voice-wave-bars flex items-center gap-1 h-5" id="voiceWaveBars">
+        <span class="bar bar-1"></span>
+        <span class="bar bar-2"></span>
+        <span class="bar bar-3"></span>
+        <span class="bar bar-4"></span>
+        <span class="bar bar-5"></span>
+      </div>
+    </div>
+
+    <!-- LIVE AGENT ACTIVITY & THOUGHT STREAM -->
+    <div class="w-full bg-slate-900/80 rounded-xl p-2.5 border border-cyan-500/20 mb-3 text-left font-body-md shadow-inner" id="voiceActivityWrap">
+      <div class="flex items-center justify-between mb-1.5 text-[11px] font-semibold text-cyan-400">
+        <span class="flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px] animate-spin" id="voiceSpinnerIcon" style="display:none;">progress_activity</span>
+          <span class="material-symbols-outlined text-[14px]" id="voiceStaticIcon">smart_toy</span>
+          Agent Live Actions & Execution
+        </span>
+        <span class="text-[10px] text-slate-400 font-mono" id="voiceActionCount">Idle</span>
+      </div>
+      <div class="space-y-1.5 max-h-24 overflow-y-auto pr-1" id="voiceLiveSteps">
+        <div class="text-[11px] text-slate-400 italic flex items-center gap-1.5 py-1" id="voiceStepsEmpty">
+          <span class="w-1.5 h-1.5 rounded-full bg-cyan-400/50"></span>
+          Ready for anything — chat, ask general knowledge, or manage WhatsApp. Sends need your yes.
+        </div>
+      </div>
+      <!-- In-Voice Action Approval Card (when agent proposes send/delete) -->
+      <div id="voiceApprovalCard" class="hidden mt-2 p-2 rounded-lg bg-slate-950 border border-amber-400/40 text-xs">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-amber-300 font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">gavel</span>
+            Action Approval Required
+          </span>
+          <span class="text-[10px] text-slate-400 font-mono" id="voiceActionType">WhatsApp Send</span>
+        </div>
+        <p class="text-slate-300 text-[11px] mb-2" id="voiceActionSummary">Drafting message...</p>
+        <div class="flex items-center justify-end gap-2">
+          <button type="button" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[11px] font-semibold" id="voiceRejectBtn" onclick="decideVoiceAction(false)">Reject</button>
+          <button type="button" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-semibold flex items-center gap-1 shadow-sm" id="voiceApproveBtn" onclick="decideVoiceAction(true)">
+            <span class="material-symbols-outlined text-[13px]">check</span>
+            Approve & Execute
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dynamic Live Transcript Box -->
+    <div class="w-full bg-slate-950/70 rounded-xl p-3 border border-white/10 max-h-28 overflow-y-auto mb-4 text-left text-xs space-y-2 font-body-md shadow-inner" id="voiceTranscriptBox">
+      <div class="text-slate-400 italic text-center py-1" id="voiceEmptyTranscript">
+        Talk naturally: <i>"Tell me a joke"</i>, <i>"Explain quantum physics"</i> or <i>"Send hi to Mom"</i> — sends ask first.
+      </div>
+    </div>
+
+    <!-- Bottom Interactive Controls -->
+    <div class="flex items-center justify-center gap-3 w-full pt-1">
+      <button id="voiceMicToggleBtn"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm
+               bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25
+               hover:brightness-110 active:scale-95 transition-all"
+        title="Toggle Microphone" onclick="toggleVoiceListening()">
+        <span class="material-symbols-outlined text-xl" id="voiceMicIcon">mic</span>
+        <span id="voiceMicLabel">Start Talking</span>
+      </button>
+      <button id="voiceStopBtn"
+        class="hidden flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm
+               bg-rose-500/90 text-white shadow-lg shadow-rose-500/25 hover:brightness-110 active:scale-95 transition-all"
+        title="Interrupt / Stop Voice" onclick="interruptVoicePlayback()">
+        <span class="material-symbols-outlined text-xl">stop_circle</span>
+        <span>Stop</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/vendor/socket.io.min.js"></script>
+<script src="/static/app.js?v=76"></script>
+</body>
+</html>

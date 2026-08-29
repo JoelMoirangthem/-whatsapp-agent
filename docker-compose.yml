@@ -1,0 +1,61 @@
+# WhatsApp Agent — full stack deployment
+#
+# Usage:
+#   cp .env.compose.example .env   # then fill in keys/tokens
+#   docker compose up -d --build
+#   docker compose logs -f bridge  # scan the QR with WhatsApp → Linked Devices
+#
+# Approval UI:  http://127.0.0.1:8100/approvals
+# Agent health: http://127.0.0.1:8100/health
+
+name: whatsapp-agent
+
+services:
+  bridge:
+    build: ./whatsapp-mcp/whatsapp-bridge
+    restart: unless-stopped
+    # Loopback-only on the host; the agent service reaches it over the
+    # internal compose network, not via published ports.
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      WHATSAPP_BRIDGE_PORT: "8080"
+      # Shared secret: the agent service authenticates with the same value.
+      WHATSAPP_BRIDGE_TOKEN: ${WHATSAPP_BRIDGE_TOKEN:?set WHATSAPP_BRIDGE_TOKEN in .env}
+      FORWARD_SELF: ${FORWARD_SELF:-false}
+      WEBHOOK_ENABLED: ${WEBHOOK_ENABLED:-false}
+      WEBHOOK_URL: ${WEBHOOK_URL:-}
+      WHATSAPP_DELETE_MAX_AGE_HOURS: ${WHATSAPP_DELETE_MAX_AGE_HOURS:-48}
+      # Recognisable device label at pair time (re-pair to change)
+      WHATSAPP_DEVICE_NAME: ${WHATSAPP_DEVICE_NAME:-whatsapp-agent-bridge}
+    volumes:
+      - wa-store:/data/store
+
+  agent:
+    build: ./agent-service
+    restart: unless-stopped
+    depends_on:
+      - bridge
+    ports:
+      - "127.0.0.1:8100:8100"
+    environment:
+      AGENTROUTER_BASE_URL: ${AGENTROUTER_BASE_URL:-https://agentrouter.org/v1}
+      AGENTROUTER_API_KEY: ${AGENTROUTER_API_KEY:?set AGENTROUTER_API_KEY in .env}
+      AGENTROUTER_MODEL: ${AGENTROUTER_MODEL:-gpt-5.6-sol}
+      AGENTROUTER_USER_AGENT: ${AGENTROUTER_USER_AGENT:-opencode/1.0.0}
+      BRIDGE_API_URL: http://bridge:8080/api
+      BRIDGE_TOKEN: ${WHATSAPP_BRIDGE_TOKEN}
+      AGENT_SERVICE_TOKEN: ${AGENT_SERVICE_TOKEN:?set AGENT_SERVICE_TOKEN in .env}
+      MESSAGES_DB_PATH: /data/store/messages.db
+      PENDING_ACTION_TTL_SECONDS: ${PENDING_ACTION_TTL_SECONDS:-300}
+      LATENCY_WARN_MS: ${LATENCY_WARN_MS:-2000}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-JBFqnCBsd6RMkjVDRZzb}
+      ELEVENLABS_MODEL: ${ELEVENLABS_MODEL:-eleven_turbo_v2_5}
+      VOICE_WAKE_GREETING: ${VOICE_WAKE_GREETING:-Hello! How can I help with WhatsApp today?}
+    volumes:
+      # Read access to the bridge's message archive + .bridge-token
+      - wa-store:/data/store:ro
+
+volumes:
+  wa-store:

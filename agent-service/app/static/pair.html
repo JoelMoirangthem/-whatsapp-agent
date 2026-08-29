@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en" class="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Session Link — WhatsApp Agent</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        surface: "#edf2f7",
+        "surface-container": "rgba(255, 255, 255, 0.55)",
+        "surface-container-high": "rgba(255, 255, 255, 0.75)",
+        "surface-bright": "#ffffff",
+        "on-surface": "#0f172a",
+        "on-surface-variant": "#64748b",
+        primary: "#2563eb",
+        "primary-container": "#1d4ed8",
+        "on-primary": "#ffffff",
+        "primary-fixed": "#3b82f6",
+        secondary: "#6366f1",
+        tertiary: "#8b5cf6",
+        "tertiary-container": "#7c3aed",
+        background: "#edf2f7",
+        error: "#ef4444"
+      },
+      fontFamily: {
+        "body-md": ["Hanken Grotesk", "sans-serif"],
+        "headline-lg": ["Hanken Grotesk", "sans-serif"],
+        "headline-md": ["Hanken Grotesk", "sans-serif"],
+        "label-md": ["JetBrains Mono", "monospace"]
+      }
+    }
+  }
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+  @keyframes scan {
+    0%, 100% { top: 6%; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    50% { top: 88%; }
+  }
+  .scanline {
+    position: absolute;
+    left: 4%;
+    right: 4%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #2563eb, transparent);
+    box-shadow: 0 0 16px #2563eb;
+    animation: scan 2.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .ring svg { transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 3.5; }
+  .ring .bgc { stroke: rgba(148, 163, 184, 0.25); }
+  .ring .fgc { stroke: #2563eb; stroke-linecap: round; transition: stroke-dashoffset 0.8s linear; }
+</style>
+</head>
+<body class="bg-surface font-body-md text-on-surface min-h-screen flex items-center justify-center p-4 md:p-8 relative overflow-x-hidden"
+      style="background-image: radial-gradient(1300px 800px at 8% 4%, rgba(99, 102, 241, 0.12), transparent 60%), radial-gradient(1100px 700px at 92% 92%, rgba(14, 165, 233, 0.12), transparent 55%), #edf2f7;">
+  
+  <!-- Header / Brand -->
+  <div class="absolute top-6 left-6 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/25 shadow-[0_4px_16px_rgba(37,99,235,0.18)]">
+      <span class="material-symbols-outlined text-xl">shield</span>
+    </div>
+    <div>
+      <span class="font-headline-md text-on-surface font-bold tracking-wide text-base bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent">SafeGuard</span>
+      <span class="text-[10px] text-primary/80 block -mt-1 font-label-md tracking-wider font-semibold">WHATSAPP COPILOT</span>
+    </div>
+  </div>
+
+  <div class="w-full max-w-4xl bg-white/55 shadow-[0_20px_50px_rgba(15,23,42,0.06)] rounded-3xl p-8 md:p-12 relative z-10 border border-white/60 flex flex-col md:flex-row items-center justify-between gap-10 backdrop-blur-2xl mt-12 md:mt-0">
+    <!-- Left Column: Instructions -->
+    <div class="flex-1 flex flex-col gap-6 max-w-md w-full">
+      <div>
+        <h1 class="font-headline-lg text-on-surface text-2xl md:text-3xl font-bold tracking-tight">Secure Session Link</h1>
+        <p class="text-on-surface-variant text-sm mt-1.5 leading-relaxed">Scan the real-time encrypted QR code with WhatsApp to connect the bridge.</p>
+      </div>
+
+      <ol class="space-y-4 text-on-surface-variant text-sm">
+        <li class="flex items-start gap-3">
+          <span class="flex-shrink-0 w-7 h-7 rounded-xl border border-primary/30 text-primary flex items-center justify-center font-label-md bg-primary/10 text-xs font-bold mt-0.5 shadow-sm">1</span>
+          <p class="pt-0.5">Open <strong class="text-on-surface font-semibold">WhatsApp</strong> on your authorized mobile phone.</p>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="flex-shrink-0 w-7 h-7 rounded-xl border border-primary/30 text-primary flex items-center justify-center font-label-md bg-primary/10 text-xs font-bold mt-0.5 shadow-sm">2</span>
+          <p class="pt-0.5">Go to <strong class="text-on-surface font-semibold">Settings &gt; Linked Devices</strong> and tap <strong class="text-on-surface font-semibold">Link a Device</strong>.</p>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="flex-shrink-0 w-7 h-7 rounded-xl border border-primary/30 text-primary flex items-center justify-center font-label-md bg-primary/10 text-xs font-bold mt-0.5 shadow-sm">3</span>
+          <p class="pt-0.5">Point your phone camera at the matrix code on the right.</p>
+        </li>
+      </ol>
+
+      <!-- Token Gate (Fallback) -->
+      <div id="tokenGate" style="display:none;" class="bg-white/60 p-4 rounded-2xl border border-slate-300/60 backdrop-blur-lg">
+        <label for="tokenInput" class="block text-xs font-label-md uppercase tracking-wider text-primary font-bold mb-1">Service Auth Token</label>
+        <input id="tokenInput" type="password" placeholder="paste token from agent-service/data/.agent-token"
+               class="w-full px-3.5 py-2.5 rounded-xl bg-white/80 border border-slate-300/60 text-on-surface text-xs font-label-md focus:outline-none focus:border-primary">
+        <button id="saveToken" type="button" class="mt-3 w-full py-2.5 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:brightness-105 transition-all shadow-[0_4px_14px_rgba(37,99,235,0.25)]">
+          Authenticate &amp; Show QR
+        </button>
+      </div>
+
+      <div class="pt-4 border-t border-slate-300/60 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-xs text-on-surface-variant font-label-md font-medium">
+          <span class="material-symbols-outlined text-primary text-sm">lock</span>
+          <span>E2E Encrypted Bridge</span>
+        </div>
+        <a href="/" class="text-xs text-primary hover:underline inline-flex items-center gap-1 font-semibold">
+          <span>Open Agent Console</span>
+          <span class="material-symbols-outlined text-xs">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Right Column: QR Scanner Matrix Card -->
+    <div class="w-full md:w-[320px] flex flex-col items-center gap-5">
+      <div class="w-full aspect-square bg-white/70 rounded-2xl p-4 shadow-[0_10px_35px_rgba(37,99,235,0.1)] border border-primary/25 relative overflow-hidden backdrop-blur-md" id="frame">
+        <!-- Laser Scan Line -->
+        <div class="scanline" id="scanline"></div>
+        
+        <!-- Corner Reticles -->
+        <div class="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-primary pointer-events-none rounded-tl-sm"></div>
+        <div class="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-primary pointer-events-none rounded-tr-sm"></div>
+        <div class="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-primary pointer-events-none rounded-bl-sm"></div>
+        <div class="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-primary pointer-events-none rounded-br-sm"></div>
+
+        <!-- QR Code Image -->
+        <img id="qrimg" alt="WhatsApp pairing QR code" class="w-full h-full object-contain rounded-xl transition-opacity duration-300" style="opacity:0">
+      </div>
+
+      <!-- Rotation Countdown Ring & Telemetry -->
+      <div class="flex items-center justify-between w-full px-2">
+        <div class="flex items-center gap-2 text-primary font-label-md text-xs font-semibold">
+          <span class="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_#2563eb] animate-pulse"></span>
+          <span id="state">Awaiting telemetry...</span>
+        </div>
+
+        <div class="ring w-8 h-8 flex items-center justify-center" id="ring" title="QR auto-refresh countdown">
+          <svg width="32" height="32" viewBox="0 0 38 38">
+            <circle class="bgc" cx="19" cy="19" r="16"/>
+            <circle class="fgc" cx="19" cy="19" r="16"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-8 text-center text-xs text-on-surface-variant font-label-md flex items-center gap-2">
+    <span class="material-symbols-outlined text-sm text-primary/70">verified_user</span>
+    <span>SafeGuard Enterprise WhatsApp Gateway · Zero Data Retention</span>
+  </div>
+
+  <script src="/static/pair.js?v=10"></script>
+</body>
+</html>
